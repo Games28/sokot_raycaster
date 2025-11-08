@@ -123,15 +123,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Game.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Pixel.cpp" />
+    <ClCompile Include="sokol\Pixel.cpp" />
     <ClCompile Include="textures.cpp" />
     <ClCompile Include="upng.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
-    <ClInclude Include="Pixel.h" />
+    <ClInclude Include="sokol\Pixel.h" />
     <ClInclude Include="sokol\sokol_app.h" />
     <ClInclude Include="sokol\sokol_gfx.h" />
     <ClInclude Include="sokol\sokol_glue.h" />

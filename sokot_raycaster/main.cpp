@@ -9,6 +9,7 @@ static void input_cb(const sapp_event* e) { game_ptr->input(e); }
 
 sapp_desc sokol_main(int argc, char* argv[])
 {
+	
 	static Game game;
 	game_ptr = &game;
 
@@ -19,5 +20,8 @@ sapp_desc sokol_main(int argc, char* argv[])
 	app_desc.width = WINDOW_WDITH;
 	app_desc.height = WINDOW_HEIGHT;
 	app_desc.icon.sokol_default = true;
+	app_desc.sample_count = 4;
+
+	return app_desc;
 
 }

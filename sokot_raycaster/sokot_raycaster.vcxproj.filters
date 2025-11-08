@@ -24,10 +24,7 @@
     <ClCompile Include="upng.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Game.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pixel.cpp">
+    <ClCompile Include="sokol\Pixel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -62,7 +59,7 @@
     <ClInclude Include="Game.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Pixel.h">
+    <ClInclude Include="sokol\Pixel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
