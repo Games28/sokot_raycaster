@@ -24,6 +24,7 @@
 #define SPEED_STRAFE       5.0f 
 
 
+
 //generalized struct initializer
 template<typename T>
 void zeroMem(T& t) {
@@ -52,6 +53,10 @@ struct Game
 	float fDistToProjPlane;
 	std::vector<sgp_vec2> pixel_coord_buffer;
 	std::vector<Pixel> pixel_buffer;
+	std::vector<sgp_vertex> vertex_buffer;
+
+	int increaseX = 100;
+	int increasey = 100;
 
 	void userInit()
 	{
@@ -144,25 +149,25 @@ struct Game
 		float fNewY = fPlayerY;
 
 		// walk forward - CD checked
-		if (GetKey(SAPP_KEYCODE_W).bHeld) {
-			fNewX += cos(fPlayerA_deg * PI / 180.0f) * SPEED_MOVE * dt;
-			fNewY += sin(fPlayerA_deg * PI / 180.0f) * SPEED_MOVE * dt;
-		}
-		// walk backwards - CD checked
-		if (GetKey(SAPP_KEYCODE_S).bHeld) {
-			fNewX -= cos(fPlayerA_deg * PI / 180.0f) * SPEED_MOVE * dt;
-			fNewY -= sin(fPlayerA_deg * PI / 180.0f) * SPEED_MOVE * dt;
-		}
-		// strafe left - CD checked
-		if (GetKey(SAPP_KEYCODE_Q).bHeld) {
-			fNewX += sin(fPlayerA_deg * PI / 180.0f) * SPEED_STRAFE * dt;
-			fNewY -= cos(fPlayerA_deg * PI / 180.0f) * SPEED_STRAFE * dt;
-		}
-		// strafe right - CD checked
-		if (GetKey(SAPP_KEYCODE_E).bHeld) {
-			fNewX -= sin(fPlayerA_deg * PI / 180.0f) * SPEED_STRAFE * dt;
-			fNewY += cos(fPlayerA_deg * PI / 180.0f) * SPEED_STRAFE * dt;
-		}
+		//if (GetKey(SAPP_KEYCODE_W).bHeld) {
+		//	fNewX += cos(fPlayerA_deg * PI / 180.0f) * SPEED_MOVE * dt;
+		//	fNewY += sin(fPlayerA_deg * PI / 180.0f) * SPEED_MOVE * dt;
+		//}
+		//// walk backwards - CD checked
+		//if (GetKey(SAPP_KEYCODE_S).bHeld) {
+		//	fNewX -= cos(fPlayerA_deg * PI / 180.0f) * SPEED_MOVE * dt;
+		//	fNewY -= sin(fPlayerA_deg * PI / 180.0f) * SPEED_MOVE * dt;
+		//}
+		//// strafe left - CD checked
+		//if (GetKey(SAPP_KEYCODE_Q).bHeld) {
+		//	fNewX += sin(fPlayerA_deg * PI / 180.0f) * SPEED_STRAFE * dt;
+		//	fNewY -= cos(fPlayerA_deg * PI / 180.0f) * SPEED_STRAFE * dt;
+		//}
+		//// strafe right - CD checked
+		//if (GetKey(SAPP_KEYCODE_E).bHeld) {
+		//	fNewX -= sin(fPlayerA_deg * PI / 180.0f) * SPEED_STRAFE * dt;
+		//	fNewY += cos(fPlayerA_deg * PI / 180.0f) * SPEED_STRAFE * dt;
+		//}
 		// collision detection - check if out of bounds or inside occupied tile
 		// only update position if no collision
 		if (fNewX >= 0 && fNewX < nMapX &&
@@ -172,7 +177,19 @@ struct Game
 			fPlayerY = fNewY;
 		}
 
-
+		//size increase test
+		if (GetKey(SAPP_KEYCODE_W).bHeld) {
+			increasey += 1;
+		}
+		if (GetKey(SAPP_KEYCODE_DOWN).bHeld) {
+			increasey -= 1;
+		}
+		if (GetKey(SAPP_KEYCODE_LEFT).bHeld) {
+			increaseX -= 1;
+		}
+		if (GetKey(SAPP_KEYCODE_RIGHT).bHeld) {
+			increaseX += 1;
+		}
 		//exit
 		if (GetKey(SAPP_KEYCODE_ESCAPE).bPressed) sapp_request_quit();
 	}
@@ -184,7 +201,7 @@ struct Game
 
 	void userRender()
 	{
-		pixel_count = 0;
+		vertex_buffer.clear();
 		int width = sapp_width(), height = sapp_height();
 		sgp_begin(width, height);
 		// draw background
@@ -193,8 +210,26 @@ struct Game
 		sgp_reset_color();
 
 		sgp_viewport(0, 0, width, height);
-		
-		draw_points();
+		sgp_push_transform();
+		for (int y = 0; y < increasey; y++)
+		{
+			for (int x = 0; x < increaseX; x++)
+			{
+				Pixel p = CYAN;
+				if (x < 50 && y < 50)
+				{
+					p = GREEN;
+				}
+				if (x > 100 && y > 100)
+				{
+					p = BLUE;
+				}
+				
+				set_pixel(x, y, p);
+			}
+		}
+		draw_pixels();
+		sgp_pop_transform();
 		
 
 		sg_pass pass; zeroMem(pass);
@@ -228,50 +263,25 @@ struct Game
 	//raycast test
 
 	 void set_pixel(int coordx, int coordy, Pixel p)
-	{
-		 sgp_irect viewport = sgp_query_state()->viewport;
-		 if (coordx < viewport.w && coordy < viewport.h)
-		 {
-			 
-		   sgp_vec2 v = { (float)coordx,(float)coordy };
-		   pixel_coord_buffer.push_back(v);
-		   pixel_buffer.push_back(p);
-		 }
-
-		
+	{ 
+		 sgp_vertex tmp;
+		 
+		 sgp_vec2 pos = { coordx,coordy };
+		 sgp_color_ub4 pix = {p.r, p.g, p.b, 255};
+		 tmp.position  = pos;
+		 tmp.color = pix;
+		 vertex_buffer.push_back(tmp);
 		
 	}
 
 	 void draw_pixels()
 	 {
-		 //sgp_draw_points(pixel_buffer, count);
+		
+		sgp_vector_draw(SG_PRIMITIVETYPE_POINTS, vertex_buffer, vertex_buffer.size());
 
 	 }
 
-	static void draw_points(void) {
-		// point grid
-		//sgp_set_color(0.0f, 1.0f, 1.0f, 1.0f);
-		sgp_irect viewport = sgp_query_state()->viewport;
-		int width = viewport.w, height = viewport.h;
-		static sgp_vec2 points_buffer[2196];
-		unsigned int count = 0;
-		for (int y = 64; y < height - 64 && count < 2196; y += 8) {
-			for (int x = 64; x < width - 64 && count < 2196; x += 8) {
-				
-				if (count > 1000)
-				{
-					sgp_set_color(0.5f, 0.0f, 1.0f, 1.0f);
-				}
-				else
-				{
-					sgp_set_color(0.0f, 1.0f, 1.0f, 1.0f);
-				}
-				sgp_vec2 v = { (float)x,(float)y };
-				points_buffer[count++] = v;
-			}
-		}
-		sgp_draw_points(points_buffer, count);
-	}
+	
 
 	void RenderWall()
 	{

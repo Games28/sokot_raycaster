@@ -410,6 +410,7 @@ Increase this value if you need to use shader with many uniforms.
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <vector>
 
 #ifdef __cplusplus
 extern "C" {
@@ -2751,6 +2752,40 @@ void sgp_clear(void) {
 
     sg_pipeline pip = _sgp_lookup_pipeline(SG_PRIMITIVETYPE_TRIANGLES, SGP_BLENDMODE_NONE);
     _sgp_queue_draw(pip, region, vertex_index, num_vertices, SG_PRIMITIVETYPE_TRIANGLES);
+}
+
+void sgp_vector_draw(sg_primitive_type primitive_type, std::vector<sgp_vertex> vertices, uint32_t count) {
+    SOKOL_ASSERT(_sgp.init_cookie == _SGP_INIT_COOKIE);
+    SOKOL_ASSERT(_sgp.cur_state > 0);
+    if (SOKOL_UNLIKELY(count == 0)) {
+        return;
+    }
+
+    // setup vertices
+    uint32_t vertex_index = _sgp.cur_vertex;
+    sgp_vertex* v = _sgp_next_vertices(count);
+    if (SOKOL_UNLIKELY(!v)) {
+        return;
+    }
+
+    // fill vertices
+    float thickness = (primitive_type == SG_PRIMITIVETYPE_POINTS || primitive_type == SG_PRIMITIVETYPE_LINES || primitive_type == SG_PRIMITIVETYPE_LINE_STRIP) ? _sgp.state.thickness : 0.0f;
+    sgp_mat2x3 mvp = _sgp.state.mvp; // copy to stack for more efficiency
+    _sgp_region region = { FLT_MAX, FLT_MAX, -FLT_MAX, -FLT_MAX };
+    for (uint32_t i = 0; i < count; ++i) {
+        sgp_vec2 p = _sgp_mat3_vec2_mul(&mvp, &vertices[i].position);
+        region.x1 = _sg_min(region.x1, p.x - thickness);
+        region.y1 = _sg_min(region.y1, p.y - thickness);
+        region.x2 = _sg_max(region.x2, p.x + thickness);
+        region.y2 = _sg_max(region.y2, p.y + thickness);
+        v[i].position = p;
+        v[i].texcoord = vertices[i].texcoord;
+        v[i].color = vertices[i].color;
+    }
+
+    // queue draw
+    sg_pipeline pip = _sgp_lookup_pipeline(primitive_type, _sgp.state.blend_mode);
+    _sgp_queue_draw(pip, region, vertex_index, count, primitive_type);
 }
 
 void sgp_draw(sg_primitive_type primitive_type, const sgp_vertex* vertices, uint32_t count) {
